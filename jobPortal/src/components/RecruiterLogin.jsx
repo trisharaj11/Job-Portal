@@ -15,20 +15,20 @@ const RecruiterLogin = () => {
   const [image,setImage]=useState(false)
 
   const [isTextdatasubmited,setIsTextDataSubmitted]=useState(false)
-   const {setshowRecruiterLogin,backendURL,setCompanyToken,setCompanyData}=useContext(AppContext)
+   const {setshowRecruiterLogin,backendURL,setcompanyToken,setcompanyData}=useContext(AppContext)
   const onSubmitHandeler=async(e)=>{
     e.preventDefault()
 
     if (state=="Sign Up" && !isTextdatasubmited) {
-      setIsTextDataSubmitted(true)
+      return setIsTextDataSubmitted(true)
     }
     try {
       if(state==="Login"){
         const {data}=await axios.post(backendURL + '/api/company/login',{email,password})
         if(data.success){
            //console.log(data);
-           setCompanyData(data.company)
-           setCompanyToken(data.token)
+           setcompanyData(data.company)
+           setcompanyToken(data.token)
            localStorage.setItem('companyToken',data.token)
            setshowRecruiterLogin(false)
            navigate('/dashboard')
@@ -36,9 +36,28 @@ const RecruiterLogin = () => {
         } else{
           toast.error(data.message)
         }
+      } else{
+        const formData=new FormData()
+        formData.append('name',name)
+        formData.append('password',password)
+        formData.append('email',email)
+        formData.append('image',image) 
+        
+        const {data}=await axios.post(backendURL+ '/api/company/register',formData)
+
+        if(data.success){
+           setcompanyData(data.company)
+           setcompanyToken(data.token)
+           localStorage.setItem('companyToken',data.token)
+           setshowRecruiterLogin(false)
+           navigate('/dashboard')
+        }
+        else{
+          toast.error(data.message)
+        }
       }
     } catch (error) {
-      
+       toast.error(error.message)
     }
   }
   
@@ -58,7 +77,7 @@ const RecruiterLogin = () => {
         { state === "Sign Up" && isTextdatasubmited 
         ? <>
         <div className='flex items-center gap-4 my-10'>
-          <label htmlFor="">
+          <label htmlFor="image">
             <img className='w-16 rounded-full' src={image ? URL.createObjectURL(image) : assets.upload_area} alt="" />
             <input type="file" id='image' hidden  onChange={(e) => setImage(e.target.files[0])} />
           </label>

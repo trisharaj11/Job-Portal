@@ -3,6 +3,7 @@ import { messageInRaw } from "svix"
 import User from "../models/User.js"
 import JobApplication from "../models/JobApplication.js"
 import {v2 as cloudinary} from "cloudinary"
+import Job from "../models/Job.js"
 
 //get user data
 export const getUserData=async(req,res)=>{
@@ -27,14 +28,14 @@ export const applyForJob=async(req,res)=>{
    const userId=req.auth.userId
 
    try {
-    const isAlreadyApplied=await JobApplication.find({jobId,userId})
-    if(isAlreadyApplied.length>0){
+    const isAlreadyApplied=await JobApplication.findOne({jobId,userId})
+    if(isAlreadyApplied){
         return res.json({success:false,message:'Already applied'})
     }
     const jobData=await Job.findById(jobId)
 
     if(!jobData){
-        return res.sjon({success:false,message:'Job Not found'})
+        return res.json({success:false,message:'Job Not found'})
 
     }
     await JobApplication.create({
@@ -56,11 +57,11 @@ export const getUserJobApplication=async(req,res)=>{
       const userId=req.auth.userId
 
       const application=await JobApplication.find({userId})
-      .populate('companyId','name email image')
+      .populate('userId','name email resume image')
       .populate('jobId','title description location category level salary')
       .exec()
 
-      if(!application){
+      if(!application  || application.length === 0){
         return res.json({success:false,message:'No job applications found for this user!'})
 
       }
@@ -77,7 +78,7 @@ export const updateUserResume=async(req,res)=>{
   try {
     const userId=req.auth.userId
 
-    const resumeFile=req.resumeFile
+    const resumeFile=req.file
 
     const userData=await User.findById(userId)
 
